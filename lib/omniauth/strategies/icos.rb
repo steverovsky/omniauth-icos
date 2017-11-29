@@ -4,7 +4,7 @@ require 'securerandom'
 
 module OmniAuth
   module Strategies
-    class ICOS < OmniAuth::Strategies::OAuth2
+    class Icos < OmniAuth::Strategies::OAuth2
       DEFAULT_SCOPES = 'hydra.consent offline'
 
       option :name, 'icos'

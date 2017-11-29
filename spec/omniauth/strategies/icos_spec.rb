@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe OmniAuth::Strategies::Icos do
+describe OmniAuth::Strategies::ICOS do
   subject do
-    OmniAuth::Strategies::Icos.new({})
+    OmniAuth::Strategies::ICOS.new({})
   end
 
   context 'client options' do
@@ -25,7 +25,7 @@ describe OmniAuth::Strategies::Icos do
 
   context 'default scopes' do
     it 'should have correct default scope' do
-      expect(OmniAuth::Strategies::Icos::DEFAULT_SCOPES).to eq 'hydra.consent offline'
+      expect(OmniAuth::Strategies::ICOS::DEFAULT_SCOPES).to eq 'hydra.consent offline'
     end
   end
 end

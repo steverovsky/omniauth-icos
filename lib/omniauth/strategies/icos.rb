@@ -67,7 +67,6 @@ module OmniAuth
       end
 
       def raw_info
-        puts MultiJson.decode(access_token.get('/v1/services/client/').body)
         @raw_info ||= MultiJson.decode(access_token.get('/v1/services/client/').body)
       rescue ::Errno::ETIMEDOUT
         raise ::Timeout::Error

@@ -11,7 +11,7 @@ module OmniAuth
 
       option :client_options, {
         authorize_url: '/oauth2/auth',
-        token_url:     '/oauth2/token',
+        token_url:     '/v1/consents/exchange',
         site:          'https://icosid.com'
       }
 
@@ -27,7 +27,7 @@ module OmniAuth
 
       uid { user_info['Id'] }
 
-      info do 
+      info do
         {
           :email                 => user_info['Email'],
           :phone                 => user_info['Phone'],
@@ -35,31 +35,66 @@ module OmniAuth
           :first_name            => user_info['FirstName'],
           :middle_name           => user_info['MiddleName'],
           :last_name             => user_info['LastName'],
-          :county                => user_info['County'],
+          :lang                  => user_info['Lang'],
+          :county_code           => user_info['Country'],
+          :city                  => user_info['City'],
           :citizenship           => user_info['Citizenship'],
           :address               => user_info['Address'],
+          :state                 => user_info['State'],
+          :dob                   => user_info['Dob'],
           :document_number       => user_info['DocumentNumber'],
+          :document_type         => user_info['DocumentType'],
           :use_g2fa              => user_info['UseG2fa'],
-          :globalid_verify       => user_info['GlobalidVerify'],
-          :globalid_agent_verify => user_info['GlobalidAgentVerify'],
-          :netki_status          => user_info['NetkiStatus'],
-          :eth_wallet            => user_info['EthWallet']
+          :gender                => user_info['Gender'],
+          :kyc_status            => user_info['KycStatus'],
+          :kyc_reason            => user_info['KycReason'],
+          :kyc_at                => user_info['KycAt'],
+          :is_verified           => user_info['IsVerified']
         }
       end
-      
+
       extra do
         {
           :raw_info => raw_info
         }
       end
 
-      def build_access_token
-        options.token_params.merge!(:headers => {'Authorization' => basic_auth_header })
-        super
+      def callback_url
+        options[:redirect_uri] || (full_host + script_name + callback_path)
       end
 
-      def basic_auth_header
-        'Basic ' + Base64.strict_encode64("#{options[:client_id]}:#{options[:client_secret]}")
+      def build_access_token
+        params = ::OAuth2::Authenticator.new(client.id, client.secret, :request_body).apply(
+          {
+            'Redirect'     => callback_url,
+            'ClientId'     => options[:client_id],
+            'ClientSecret' => options[:client_secret],
+            'Scopes'       => DEFAULT_SCOPES,
+            'Code'         => request.params['code']
+          }
+        )
+
+        opts = {
+          :raise_errors => options[:raise_errors],
+          :parse => params.delete(:parse),
+          :body => params,
+          :headers => { 'Content-Type' => 'application/x-www-form-urlencoded' }
+        }
+
+        headers = params.delete(:headers) || {}
+        opts[:headers].merge!(headers)
+
+        response = client.request(:post, client.token_url, opts)
+
+        if !response.parsed.is_a?(Hash) || !response.parsed['Result'] || !response.parsed['Result']['access_token']
+          error = ::OmniAuth::Error.new(response)
+          raise(error)
+        end
+
+        body = response.parsed['Result']
+        body['expires_at'] = body['expiry'].to_datetime.in_time_zone
+
+        ::OAuth2::AccessToken.from_hash(client, body)
       end
 
       def compact_full_name

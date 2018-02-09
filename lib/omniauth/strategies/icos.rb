@@ -60,13 +60,7 @@ module OmniAuth
       end
 
       def callback_url
-        puts 'yes'
         full_host + script_name + callback_path
-      end
-
-      def redirect_url
-        puts 'yes-22'
-        options[:redirect_uri] || (full_host + script_name + callback_path)
       end
 
       def compact_full_name
@@ -80,7 +74,6 @@ module OmniAuth
       end
 
       def build_access_token
-        puts 'BUILD'
         options.token_params.merge!(:headers => {'Authorization' => basic_auth_header })
         super
       end

@@ -60,6 +60,12 @@ module OmniAuth
       end
 
       def callback_url
+        puts 'yes'
+        full_host + script_name + callback_path
+      end
+
+      def redirect_url
+        puts 'yes-22'
         options[:redirect_uri] || (full_host + script_name + callback_path)
       end
 
@@ -71,6 +77,16 @@ module OmniAuth
         @raw_info ||= MultiJson.decode(access_token.get('/v1/services/client/').body)
       rescue ::Errno::ETIMEDOUT
         raise ::Timeout::Error
+      end
+
+      def build_access_token
+        puts 'BUILD'
+        options.token_params.merge!(:headers => {'Authorization' => basic_auth_header })
+        super
+      end
+
+      def basic_auth_header
+        'Basic ' + Base64.strict_encode64("#{options[:client_id]}:#{options[:client_secret]}")
       end
 
       def user_info
